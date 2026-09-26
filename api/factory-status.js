@@ -1,5 +1,5 @@
 // Vercel Serverless Function: Factory Status & Agent Seat Telemetry
-import { getPool } from './db.js';
+import { sql } from './db.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,9 +13,12 @@ export default async function handler(req, res) {
   const startTime = Date.now();
 
   try {
-    const pool = getPool();
-    const dbRes = await pool.query('SELECT COUNT(*) as res_count FROM reservations WHERE status = $1', ['active']);
-    const waitRes = await pool.query('SELECT COUNT(*) as wait_count FROM waitlist WHERE status = $1', ['waiting']);
+    const [counts] = await sql`
+      SELECT 
+        (SELECT COUNT(*) FROM reservations WHERE status = 'CONFIRMED')::int AS active_reservations,
+        (SELECT COUNT(*) FROM waitlist WHERE status = 'WAITING')::int AS active_waitlist,
+        (SELECT COUNT(*) FROM audit_logs)::int AS audit_logs_count
+    `;
 
     const latency = Date.now() - startTime;
 
@@ -70,8 +73,9 @@ export default async function handler(req, res) {
         isolation: "Docker internal bridge (zero outbound internet)"
       },
       liveMetrics: {
-        activeBookings: parseInt(dbRes.rows[0].res_count, 10),
-        activeWaitlist: parseInt(waitRes.rows[0].wait_count, 10),
+        activeBookings: counts.active_reservations || 0,
+        activeWaitlist: counts.active_waitlist || 0,
+        auditLogsCount: counts.audit_logs_count || 0,
         databaseLatencyMs: latency
       },
       timestamp: new Date().toISOString()
