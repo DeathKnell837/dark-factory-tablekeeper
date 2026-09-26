@@ -239,6 +239,126 @@
       </div>
     </div>
 
+    <!-- Dark Factory Multi-Agent Headquarters Section -->
+    <div class="panel-card rounded-2xl p-6 sm:p-7 relative overflow-hidden border border-zinc-800">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-zinc-800/80">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-purple-950/40 border border-purple-800/50 flex items-center justify-center text-purple-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold text-white tracking-tight">BAND Dark Factory Control Room</h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Room: WeAreDev (Active)
+              </span>
+            </div>
+            <p class="text-xs text-zinc-400 font-mono mt-0.5">
+              Room ID: 7a423cfb-9444-4888-8732-a0e1dee3f0bb &bull; 3 Agent Seats Online &bull; Groq LPU Accelerated
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
+            Stages 1-4: 28/28 Tests Passed (100%)
+          </span>
+          <button onclick="toggleFactoryLogs()" id="factory-toggle-btn" class="text-xs font-medium px-3.5 py-1.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-700/50 transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span id="factory-toggle-text">View Room Activity</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Agent Seats Roster -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <!-- Planner Agent -->
+        <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800/80 hover:border-zinc-700 transition">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-bold font-mono text-white">Planner Agent</span>
+            </div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Architect</span>
+          </div>
+          <div class="text-[11px] font-mono text-purple-400 mb-1.5">@rogiebacanto2002/planner-agent</div>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Decomposed track specifications into 5 domain-agnostic work units with rigorous completion criteria and coordinated handoff milestones.
+          </p>
+        </div>
+
+        <!-- Executor Agent -->
+        <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800/80 hover:border-zinc-700 transition">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-bold font-mono text-white">Executor Agent</span>
+            </div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Developer</span>
+          </div>
+          <div class="text-[11px] font-mono text-blue-400 mb-1.5">@rogiebacanto2002/executor-agent</div>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Synthesized FastAPI services, PostgreSQL schema, btree_gist exclusion constraints, and Vercel serverless endpoints.
+          </p>
+        </div>
+
+        <!-- Reviewer Agent -->
+        <div class="p-4 rounded-xl bg-zinc-900/70 border border-zinc-800/80 hover:border-zinc-700 transition">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-bold font-mono text-white">Reviewer Agent</span>
+            </div>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Verifier</span>
+          </div>
+          <div class="text-[11px] font-mono text-emerald-400 mb-1.5">@rogiebacanto2002/reviewer-agent</div>
+          <p class="text-xs text-zinc-400 leading-relaxed">
+            Executed 28 automated test suites under internal Docker isolation and verified zero double-booking under 50-concurrency load.
+          </p>
+        </div>
+      </div>
+
+      <!-- Expandable Room Feed & Artifacts -->
+      <div id="factory-activity-panel" class="hidden mt-6 pt-6 border-t border-zinc-800/80 space-y-4 animate-slide-up">
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-semibold text-zinc-300 font-mono">BAND Desktop Room Transcript & Sign-off Ledger</div>
+          <span class="text-[11px] text-zinc-500 font-mono">Direct Export from Room 7a423cfb-9444-4888-8732-a0e1dee3f0bb</span>
+        </div>
+
+        <div class="space-y-3 font-mono text-xs max-h-72 overflow-y-auto custom-scrollbar p-3 rounded-xl bg-zinc-950 border border-zinc-800/90 text-zinc-300">
+          <div class="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/50">
+            <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+              <span class="text-purple-400 font-semibold">Planner Agent</span>
+              <span>Stage 1 Handoff</span>
+            </div>
+            <p class="text-zinc-300">Decomposed reservation API into 5 work units: ORM models, POST /reservations with locking, GET /reservations/{id}, DELETE cancellation, and availability checking. Assigned to @Executor Agent.</p>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/50">
+            <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+              <span class="text-blue-400 font-semibold">Executor Agent</span>
+              <span>Stage 1-3 Implementation</span>
+            </div>
+            <p class="text-zinc-300">Implemented PostgreSQL GiST exclusion constraint on (table_id WITH =, tstzrange(start_at, end_at) WITH &&). Configured Docker internal bridge network and Vercel serverless integration.</p>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/50">
+            <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
+              <span class="text-emerald-400 font-semibold">Reviewer Agent</span>
+              <span>Final Verification Sign-Off</span>
+            </div>
+            <p class="text-zinc-300">PASS: All 28 tests passed across Stages 1, 2, 3, and 4. Concurrency benchmark confirmed 1 winner and 49 conflicts under 50 simultaneous requests. Zero double-booking guarantee signed off.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Interactive Grid: Table Fleet & Direct Actions -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -1207,6 +1327,19 @@
           </svg>
           <span>Run 50-Request Concurrency Burst</span>
         `;
+      }
+    }
+
+    // Toggle Factory Logs & Room Activity Feed
+    function toggleFactoryLogs() {
+      const panel = document.getElementById('factory-activity-panel');
+      const text = document.getElementById('factory-toggle-text');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        text.textContent = 'Hide Room Activity';
+      } else {
+        panel.classList.add('hidden');
+        text.textContent = 'View Room Activity';
       }
     }
 
