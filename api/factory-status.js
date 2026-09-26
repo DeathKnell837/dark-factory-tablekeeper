@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   try {
     const [counts] = await sql`
       SELECT 
-        (SELECT COUNT(*) FROM reservations WHERE status = 'CONFIRMED')::int AS active_reservations,
+        (SELECT COUNT(*) FROM reservations)::int AS active_reservations,
         (SELECT COUNT(*) FROM waitlist WHERE status = 'WAITING')::int AS active_waitlist,
         (SELECT COUNT(*) FROM audit_logs)::int AS audit_logs_count
     `;
