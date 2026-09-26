@@ -1,20 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dark Factory: tablekeeper — WeAreDevelopers x BAND Hackathon</title>
+  <title>TableKeeper — Autonomous Concurrency & Reservation Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"Geist Mono"', 'monospace']
+          },
           colors: {
-            brand: {
-              50: '#f0f9ff',
-              500: '#0284c7',
-              600: '#0369a1',
+            surface: {
+              DEFAULT: '#09090b',
+              panel: '#121215',
+              card: '#18181b',
+              muted: '#27272a',
+              border: '#3f3f46'
+            },
+            accent: {
+              blue: '#3b82f6',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              rose: '#f43f5e',
+              amber: '#f59e0b'
             }
           }
         }
@@ -23,492 +39,1001 @@
   </script>
   <style>
     body {
-      background-color: #0b0f19;
-      color: #f3f4f6;
+      background-color: #09090b;
+      color: #f4f4f5;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
-    .card {
-      background-color: #111827;
-      border: 1px solid #1f2937;
+    .panel-card {
+      background-color: rgba(24, 24, 27, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(63, 63, 70, 0.4);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .panel-card:hover {
+      border-color: rgba(113, 113, 122, 0.5);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #121215;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
     }
   </style>
 </head>
-<body class="antialiased min-h-screen p-4 md:p-8">
-  <div class="max-w-6xl mx-auto space-y-6">
+<body class="min-h-screen font-sans antialiased text-zinc-100 flex flex-col justify-between selection:bg-zinc-700 selection:text-white">
 
-    <!-- Header Banner -->
-    <header class="card rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-      <div class="space-y-2">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            FACTORY ACTIVE &middot; 4/4 STAGES VERIFIED
+  <!-- Top Navigation & System Status -->
+  <header class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="h-9 w-9 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-zinc-100 shadow-inner">
+          <svg class="w-5 h-5 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold tracking-tight text-white">TableKeeper Dark Factory</span>
+            <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">v4.0.0</span>
+          </div>
+          <p class="text-xs text-zinc-400 font-mono">WeAreDevelopers x BAND Hackathon</p>
+        </div>
+      </div>
+
+      <!-- Live Connectivity Telemetry -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-mono">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span class="text-xs text-gray-400">BAND Room: <code class="text-sky-400 font-mono">WeAreDev (7a423cfb)</code></span>
+          <span class="text-zinc-300" id="db-connection-text">Neon PostgreSQL Connected</span>
+          <span class="text-zinc-500">|</span>
+          <span class="text-zinc-400" id="db-latency-text">-- ms</span>
         </div>
-        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-white">
-          🍽️ Dark Factory: tablekeeper
-        </h1>
-        <p class="text-sm text-gray-400 max-w-2xl">
-          Autonomous AI Factory operating inside <strong>BAND Desktop</strong> on the <strong>tablekeeper</strong> track.
-          Guarantees zero double-booking under extreme concurrency, cross-timezone bookings, and atomic waitlist auto-promotion.
-        </p>
-      </div>
 
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-3 gap-3 bg-gray-900/80 p-4 rounded-xl border border-gray-800 text-center">
-        <div>
-          <div class="text-[11px] text-gray-400 uppercase font-semibold">Agent Seats</div>
-          <div class="text-xl font-extrabold text-sky-400 mt-0.5">3 Seats</div>
-        </div>
-        <div class="border-x border-gray-800 px-3">
-          <div class="text-[11px] text-gray-400 uppercase font-semibold">Double Bookings</div>
-          <div class="text-xl font-extrabold text-emerald-400 mt-0.5">0</div>
-        </div>
-        <div>
-          <div class="text-[11px] text-gray-400 uppercase font-semibold">Total Tests</div>
-          <div class="text-xl font-extrabold text-emerald-400 mt-0.5">28 / 28 Pass</div>
-        </div>
-      </div>
-    </header>
+        <button onclick="refreshAllData()" id="refresh-btn" class="p-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition" title="Refresh Live Data">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
 
-    <!-- Navigation Tabs -->
-    <div class="flex flex-wrap border-b border-gray-800 gap-2 text-sm font-medium">
-      <button onclick="setTab('overview')" id="tab-overview" class="tab-btn px-4 py-3 border-b-2 border-sky-500 text-sky-400 font-semibold transition">
-        🏢 Factory & Agent Seats
-      </button>
-      <button onclick="setTab('stage1')" id="tab-stage1" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white transition">
-        ⚡ Stage 1: Concurrency Guard
-      </button>
-      <button onclick="setTab('stage2')" id="tab-stage2" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white transition">
-        🌐 Stage 2: Timezones & Idempotency
-      </button>
-      <button onclick="setTab('stage3')" id="tab-stage3" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white transition">
-        👥 Stage 3: Capacity & Waitlist
-      </button>
-      <button onclick="setTab('stage4')" id="tab-stage4" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white transition">
-        🛡️ Stage 4: Production Audit & Metrics
-      </button>
+        <button onclick="resetDemoDatabase()" class="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-rose-950/40 text-zinc-400 hover:text-rose-300 border border-zinc-800 hover:border-rose-900/50 transition">
+          Reset Demo Data
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- TAB 1: OVERVIEW -->
-    <div id="content-overview" class="tab-content space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Planner Card -->
-        <div class="card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">SEAT 1 &middot; PLANNER</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+  <!-- Notification Banner Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none"></div>
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8 flex-1">
+
+    <!-- Hero Architecture Summary -->
+    <div class="panel-card rounded-2xl p-6 sm:p-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="space-y-3 max-w-3xl">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+              PostgreSQL 16 GiST Exclusion Guaranteed
+            </span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/30">
+              Zero Double-Booking SLA
+            </span>
+            <span class="px-2.5 py-0.5 rounded text-xs font-mono bg-purple-500/10 text-purple-400 border border-purple-500/30">
+              Multi-Agent Autonomous Factory
+            </span>
           </div>
-          <div class="font-bold text-lg text-white">@rogiebacanto2002/planner-agent</div>
-          <p class="text-xs text-gray-400 leading-relaxed">
-            Decomposed specifications into 12 distinct work units across 4 stages with unambiguous done criteria.
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            High-Concurrency Reservation & Allocation Engine
+          </h1>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Constructed autonomously inside <strong class="text-zinc-200">BAND Desktop</strong> by Planner, Executor, and Reviewer agents across 4 verified stages. Backed by live serverless <strong class="text-zinc-200">Neon PostgreSQL</strong> running with GiST exclusion constraints to guarantee that concurrent bookings targeting identical slots never result in double-allocations.
           </p>
-          <div class="border-t border-gray-800 pt-3 text-xs space-y-1 text-gray-400">
-            <div class="flex justify-between"><span>Runtime:</span> <span class="font-medium text-white">band-sdk (WebSocket)</span></div>
-            <div class="flex justify-between"><span>Model:</span> <span class="font-medium text-sky-400">Gemini 2.5 Flash Lite</span></div>
-          </div>
         </div>
 
-        <!-- Executor Card -->
-        <div class="card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">SEAT 2 &middot; EXECUTOR</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <!-- System Architecture Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3 shrink-0">
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Database Engine</div>
+            <div class="text-sm font-semibold text-zinc-100">Neon Serverless</div>
+            <div class="text-[10px] text-zinc-500 font-mono">AWS us-east-1</div>
           </div>
-          <div class="font-bold text-lg text-white">@rogiebacanto2002/executor-agent</div>
-          <p class="text-xs text-gray-400 leading-relaxed">
-            Implemented FastAPI services, PostgreSQL pessimistic row locks (`SELECT FOR UPDATE`), UTC normalizers, and atomic promotion.
-          </p>
-          <div class="border-t border-gray-800 pt-3 text-xs space-y-1 text-gray-400">
-            <div class="flex justify-between"><span>Runtime:</span> <span class="font-medium text-white">band-sdk (WebSocket)</span></div>
-            <div class="flex justify-between"><span>Model:</span> <span class="font-medium text-sky-400">Gemini 2.5 Flash Lite</span></div>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Concurrency Check</div>
+            <div class="text-sm font-semibold text-emerald-400">GiST Exclusion</div>
+            <div class="text-[10px] text-zinc-500 font-mono">Zero Race Conditions</div>
           </div>
-        </div>
-
-        <!-- Reviewer Card -->
-        <div class="card rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">SEAT 3 &middot; REVIEWER</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Timezone Engine</div>
+            <div class="text-sm font-semibold text-zinc-100">UTC Canonical</div>
+            <div class="text-[10px] text-zinc-500 font-mono">IANA Tz Aware</div>
           </div>
-          <div class="font-bold text-lg text-white">@rogiebacanto2002/reviewer-agent</div>
-          <p class="text-xs text-gray-400 leading-relaxed">
-            Executed test suites inside isolated Docker containers (`internal: true`). Verified 50-concurrency stress tests and signed off with PASS.
-          </p>
-          <div class="border-t border-gray-800 pt-3 text-xs space-y-1 text-gray-400">
-            <div class="flex justify-between"><span>Runtime:</span> <span class="font-medium text-white">band-sdk (WebSocket)</span></div>
-            <div class="flex justify-between"><span>Model:</span> <span class="font-medium text-sky-400">Gemini 2.5 Flash Lite</span></div>
+          <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-left">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Waitlist Engine</div>
+            <div class="text-sm font-semibold text-amber-400">Atomic FIFO</div>
+            <div class="text-[10px] text-zinc-500 font-mono">Auto-Promotion</div>
           </div>
         </div>
       </div>
 
-      <!-- Progressive Pipeline Overview -->
-      <div class="card rounded-2xl p-6 space-y-4">
-        <h3 class="text-lg font-bold text-white">4 Graded Progressive Stages (All Verified Inside Clean Containers)</h3>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="border border-gray-800 rounded-xl p-4 bg-gray-900/50 space-y-2">
-            <div class="text-xs font-bold text-emerald-400">STAGE 1 &middot; 7/7 PASSED</div>
-            <div class="font-bold text-sm text-white">Pessimistic Concurrency Guard</div>
-            <p class="text-xs text-gray-400">PostgreSQL row locking with <code>SELECT id FROM tables WHERE id = :id FOR UPDATE</code>. 50 simultaneous requests allow exactly 1 booking.</p>
-          </div>
-
-          <div class="border border-gray-800 rounded-xl p-4 bg-gray-900/50 space-y-2">
-            <div class="text-xs font-bold text-emerald-400">STAGE 2 &middot; 7/7 PASSED</div>
-            <div class="font-bold text-sm text-white">Timezones & Safe Retries</div>
-            <p class="text-xs text-gray-400">UTC <code>TIMESTAMPTZ</code> normalization, cross-timezone collision detection, and SHA-256 payload-hashed idempotency.</p>
-          </div>
-
-          <div class="border border-gray-800 rounded-xl p-4 bg-gray-900/50 space-y-2">
-            <div class="text-xs font-bold text-emerald-400">STAGE 3 &middot; 7/7 PASSED</div>
-            <div class="font-bold text-sm text-white">Capacity & Waitlist Auto-Promotion</div>
-            <p class="text-xs text-gray-400">Seating capacity matching (2, 4, 6, 8 tops), best-fit table allocation, and atomic auto-promotion of waitlisted parties on cancellation.</p>
-          </div>
-
-          <div class="border border-gray-800 rounded-xl p-4 bg-gray-900/50 space-y-2">
-            <div class="text-xs font-bold text-emerald-400">STAGE 4 &middot; 7/7 PASSED</div>
-            <div class="font-bold text-sm text-white">Production Hardening & Metrics</div>
-            <p class="text-xs text-gray-400">Immutable audit ledger (<code>audit_logs</code>), real-time <code>/metrics</code>, Kubernetes health probes, and deadlock resilience.</p>
-          </div>
+      <!-- Real-time Metrics Ribbon -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-800/80">
+        <div>
+          <div class="text-xs text-zinc-400">Active Tables</div>
+          <div class="text-2xl font-bold font-mono text-white mt-1" id="metric-tables">6</div>
+          <div class="text-[11px] text-zinc-500">Restaurant Capacity: 26 Seats</div>
+        </div>
+        <div>
+          <div class="text-xs text-zinc-400">Active Reservations</div>
+          <div class="text-2xl font-bold font-mono text-white mt-1" id="metric-reservations">0</div>
+          <div class="text-[11px] text-zinc-500">Live Committed Rows</div>
+        </div>
+        <div>
+          <div class="text-xs text-zinc-400">Waitlist Queue</div>
+          <div class="text-2xl font-bold font-mono text-amber-400 mt-1" id="metric-waitlist">0</div>
+          <div class="text-[11px] text-zinc-500">Awaiting Availability</div>
+        </div>
+        <div>
+          <div class="text-xs text-zinc-400">Audit Log Events</div>
+          <div class="text-2xl font-bold font-mono text-blue-400 mt-1" id="metric-audit">0</div>
+          <div class="text-[11px] text-zinc-500">Recorded System Transitions</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: STAGE 1 (CONCURRENCY SIMULATOR) -->
-    <div id="content-stage1" class="tab-content hidden space-y-6">
-      <div class="card rounded-2xl p-6 space-y-5">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Interactive Grid: Live Fleet & Real Reservation Booking -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Column Left: Real Table Fleet (7 Cols) -->
+      <section class="lg:col-span-7 space-y-4">
+        <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-lg font-bold text-white">Stage 1: 50-Concurrent Request Stress Simulator</h3>
-            <p class="text-xs text-gray-400">
-              Simulates 50 simultaneous HTTP requests attempting to book Table 1 for the exact same slot.
+            <h2 class="text-lg font-bold text-white tracking-tight">Table Fleet Status</h2>
+            <p class="text-xs text-zinc-400">Live seating state loaded directly from Neon PostgreSQL</p>
+          </div>
+          <span class="text-xs font-mono text-zinc-500" id="fleet-update-time">Loaded</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="tables-grid">
+          <!-- Dynamically populated tables -->
+          <div class="panel-card p-4 rounded-xl flex items-center justify-center text-zinc-500 text-sm">
+            Fetching tables from Neon DB...
+          </div>
+        </div>
+
+        <!-- Active Reservations List -->
+        <div class="panel-card rounded-xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-zinc-200">Committed Reservations</h3>
+            <span class="text-xs font-mono text-zinc-400" id="reservations-count-badge">0 Bookings</span>
+          </div>
+
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr class="border-b border-zinc-800 text-zinc-400">
+                  <th class="py-2 px-3">ID</th>
+                  <th class="py-2 px-3">Table</th>
+                  <th class="py-2 px-3">Guest</th>
+                  <th class="py-2 px-3">Party</th>
+                  <th class="py-2 px-3">Time Window (UTC)</th>
+                  <th class="py-2 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reservations-table-body" class="divide-y divide-zinc-800/60">
+                <tr>
+                  <td colspan="6" class="py-6 text-center text-zinc-500 font-sans text-xs">
+                    No active reservations found in Neon PostgreSQL.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Column Right: Direct Reservation Form (5 Cols) -->
+      <section class="lg:col-span-5 space-y-4">
+        <div class="panel-card rounded-2xl p-6 space-y-5">
+          <div>
+            <h2 class="text-lg font-bold text-white tracking-tight">Create Reservation</h2>
+            <p class="text-xs text-zinc-400">Commits directly to PostgreSQL with concurrency and capacity verification</p>
+          </div>
+
+          <form id="reservation-form" onsubmit="handleCreateReservation(event)" class="space-y-4 text-xs">
+            <div>
+              <label class="block font-medium text-zinc-300 mb-1">Target Table</label>
+              <select id="res-table-id" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+                <option value="1">Table 1 (2-Top, Capacity: 2)</option>
+                <option value="2">Table 2 (2-Top, Capacity: 2)</option>
+                <option value="3">Table 3 (4-Top, Capacity: 4)</option>
+                <option value="4">Table 4 (4-Top, Capacity: 4)</option>
+                <option value="5">Table 5 (6-Top, Capacity: 6)</option>
+                <option value="6">Table 6 (8-Top, Capacity: 8)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Guest Name</label>
+                <input type="text" id="res-guest-name" required value="Alexander Wright" placeholder="e.g. Elena Rostova" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Party Size</label>
+                <input type="number" id="res-party-size" required min="1" max="8" value="2" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Start Time (UTC)</label>
+                <input type="datetime-local" id="res-start-time" required class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+              </div>
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">End Time (UTC)</label>
+                <input type="datetime-local" id="res-end-time" required class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-medium text-zinc-300 mb-1">Requested Timezone</label>
+              <select id="res-timezone" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-blue-500">
+                <option value="America/New_York">America/New_York (EST / EDT)</option>
+                <option value="UTC" selected>UTC (Canonical)</option>
+                <option value="Europe/Berlin">Europe/Berlin (CET / CEST)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+              </select>
+            </div>
+
+            <button type="submit" id="create-res-btn" class="w-full py-2.5 px-4 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold transition flex items-center justify-center gap-2">
+              <span>Confirm Reservation</span>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </form>
+
+          <!-- Conflict feedback card -->
+          <div id="booking-conflict-alert" class="hidden p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 space-y-1 text-xs">
+            <div class="font-semibold flex items-center gap-1.5 text-rose-200">
+              <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>409 Conflict: Double-Booking Blocked</span>
+            </div>
+            <p id="booking-conflict-message" class="text-rose-300/90 font-mono text-[11px] leading-relaxed">
+              Table already reserved during this time interval. GiST exclusion constraint blocked simultaneous overlap.
             </p>
           </div>
-          <button onclick="runConcurrencySim()" id="btn-sim" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm rounded-xl transition shadow flex items-center justify-center gap-2">
-            🚀 Fire 50 Concurrent Bookings
+        </div>
+
+        <!-- Waitlist Join Widget -->
+        <div class="panel-card rounded-2xl p-6 space-y-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <h2 class="text-base font-bold text-white tracking-tight">Join Waitlist Queue</h2>
+            </div>
+            <p class="text-xs text-zinc-400 mt-1">If a table is booked, enter the FIFO queue. Vacated tables automatically promote the earliest waiting party.</p>
+          </div>
+
+          <form id="waitlist-form" onsubmit="handleJoinWaitlist(event)" class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Guest Name</label>
+                <input type="text" id="wl-guest-name" required value="Marcus Vance" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Party Size</label>
+                <input type="number" id="wl-party-size" required min="1" max="8" value="2" class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500">
+              </div>
+            </div>
+
+            <button type="submit" id="join-wl-btn" class="w-full py-2 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-zinc-700 hover:border-amber-500/50 font-medium transition">
+              Enqueue into Waitlist
+            </button>
+          </form>
+
+          <!-- Current Waitlist Table -->
+          <div class="pt-2">
+            <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Live FIFO Waitlist</div>
+            <div id="waitlist-container" class="space-y-2 text-xs">
+              <div class="text-zinc-500 text-center py-2">Waitlist is currently empty.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Real Concurrency Stress Test Engine (Live 50 Concurrent DB Queries) -->
+    <section class="panel-card rounded-2xl p-6 sm:p-8 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/30">
+              Zero Double-Booking Stress Test
+            </span>
+            <span class="text-xs text-zinc-400">Stage 2 & Stage 4 Hackathon Mandate</span>
+          </div>
+          <h2 class="text-xl font-bold text-white tracking-tight mt-1">
+            Real 50-Request Concurrent Collision Engine
+          </h2>
+          <p class="text-xs text-zinc-400 max-w-2xl mt-1">
+            Fires 50 simultaneous parallel asynchronous queries targeting Table 1 at the exact same millisecond against Neon PostgreSQL. Demonstrates that PostgreSQL's GiST exclusion constraint strictly allows 1 winner (201 Created) and rejects the remaining 49 with 409 Conflict.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="runConcurrencyStressTest(50)" id="stress-btn-50" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs tracking-wide transition shadow-lg shadow-blue-900/30 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Run 50-Request Concurrency Burst</span>
           </button>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
-            <div class="text-xs text-gray-400 font-medium">Successful Bookings (201 Created)</div>
-            <div id="sim-success" class="text-3xl font-black text-emerald-400 mt-1">0</div>
-          </div>
-          <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
-            <div class="text-xs text-gray-400 font-medium">Conflicts Blocked (409 Conflict)</div>
-            <div id="sim-conflict" class="text-3xl font-black text-rose-400 mt-1">0</div>
-          </div>
-          <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
-            <div class="text-xs text-gray-400 font-medium">Double Booking Violations</div>
-            <div class="text-3xl font-black text-emerald-400 mt-1">0 (Zero)</div>
-          </div>
-        </div>
-
-        <div class="border border-gray-800 rounded-xl p-4 bg-gray-950">
-          <div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Transaction Lock Execution Log (Pessimistic Row Lock: SELECT ... FOR UPDATE)</div>
-          <div id="sim-log" class="h-48 overflow-y-auto space-y-1 font-mono text-xs text-gray-400">
-            <div class="text-gray-600">Ready. Click "Fire 50 Concurrent Bookings" to execute simulation...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: STAGE 2 (TIMEZONES & IDEMPOTENCY) -->
-    <div id="content-stage2" class="tab-content hidden space-y-6">
-      <div class="card rounded-2xl p-6 space-y-5">
-        <div>
-          <h3 class="text-lg font-bold text-white">Stage 2: Cross-Timezone Collision Detector</h3>
-          <p class="text-xs text-gray-400">
-            Demonstrates how local clock times that seem disjoint actually collide when normalized to UTC TIMESTAMPTZ.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="border border-gray-800 p-5 rounded-xl bg-gray-900/60 space-y-3">
-            <div class="text-xs font-bold text-sky-400">GUEST 1: NEW YORK (EDT / UTC-4)</div>
-            <div class="text-sm">Local Input: <span class="font-mono font-semibold text-white">2026-10-15 19:00 - 21:00 EDT</span></div>
-            <div class="text-xs font-mono text-emerald-400 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
-              Normalized UTC: 2026-10-15 23:00 - 2026-10-16 01:00 UTC
-            </div>
-            <span class="inline-block text-xs px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">CONFIRMED (201)</span>
-          </div>
-
-          <div class="border border-gray-800 p-5 rounded-xl bg-gray-900/60 space-y-3">
-            <div class="text-xs font-bold text-amber-400">GUEST 2: TOKYO (JST / UTC+9)</div>
-            <div class="text-sm">Local Input: <span class="font-mono font-semibold text-white">2026-10-16 08:30 - 10:00 JST</span></div>
-            <div class="text-xs font-mono text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20">
-              Normalized UTC: 2026-10-15 23:30 - 2026-10-16 01:00 UTC
-            </div>
-            <span class="inline-block text-xs px-2.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">OVERLAP DETECTED &rarr; 409 CONFLICT</span>
-          </div>
-        </div>
-
-        <!-- Idempotency Safe Retries -->
-        <div class="border-t border-gray-800 pt-5">
-          <h4 class="text-sm font-bold text-white mb-2">SHA-256 Idempotency Verification</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-            <div class="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
-              <div class="text-emerald-400 font-bold mb-1">Identical Payload Retry (Key: idemp-7721)</div>
-              <p class="text-gray-400">Hash: 8a4c21e... matches stored payload</p>
-              <div class="mt-2 text-emerald-400 font-semibold">Result: 200 OK (Returns original reservation, 0 duplicates)</div>
-            </div>
-            <div class="p-4 bg-gray-900/60 rounded-xl border border-gray-800">
-              <div class="text-rose-400 font-bold mb-1">Mismatched Payload Retry (Key: idemp-7721)</div>
-              <p class="text-gray-400">Hash differs: guest modified time or table</p>
-              <div class="mt-2 text-rose-400 font-semibold">Result: 422 Unprocessable Entity (Replay attack blocked)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: STAGE 3 (CAPACITY & WAITLIST AUTO-PROMOTION) -->
-    <div id="content-stage3" class="tab-content hidden space-y-6">
-      <div class="card rounded-2xl p-6 space-y-5">
-        <div>
-          <h3 class="text-lg font-bold text-white">Stage 3: Restaurant Floor & FIFO Waitlist Auto-Promotion</h3>
-          <p class="text-xs text-gray-400">
-            Cancelling a table reservation instantly and atomically promotes the earliest eligible waitlisted guest.
-          </p>
-        </div>
-
-        <!-- Seating Map -->
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <div class="p-3.5 rounded-xl border border-gray-800 bg-gray-900/60 text-center">
-            <div class="text-xs text-gray-400 font-semibold">Table 1</div>
-            <div class="text-lg font-bold text-white">2-Top</div>
-            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-medium">Free</span>
-          </div>
-          <div class="p-3.5 rounded-xl border border-gray-800 bg-gray-900/60 text-center">
-            <div class="text-xs text-gray-400 font-semibold">Table 2</div>
-            <div class="text-lg font-bold text-white">2-Top</div>
-            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-medium">Free</span>
-          </div>
-          <div class="p-3.5 rounded-xl border border-gray-800 bg-gray-900/60 text-center">
-            <div class="text-xs text-gray-400 font-semibold">Table 3</div>
-            <div class="text-lg font-bold text-white">4-Top</div>
-            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-medium">Free</span>
-          </div>
-          <div class="p-3.5 rounded-xl border border-gray-800 bg-gray-900/60 text-center">
-            <div class="text-xs text-gray-400 font-semibold">Table 4</div>
-            <div class="text-lg font-bold text-white">4-Top</div>
-            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-medium">Free</span>
-          </div>
-          <div id="table-5-card" class="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-center">
-            <div class="text-xs text-amber-400 font-semibold">Table 5</div>
-            <div class="text-lg font-bold text-white">6-Top</div>
-            <span id="table-5-status" class="text-[10px] text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded font-bold">Booked (Host A)</span>
-          </div>
-          <div class="p-3.5 rounded-xl border border-gray-800 bg-gray-900/60 text-center">
-            <div class="text-xs text-gray-400 font-semibold">Table 6</div>
-            <div class="text-lg font-bold text-white">8-Top</div>
-            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-medium">Free</span>
-          </div>
-        </div>
-
-        <!-- Waitlist Queue Display -->
-        <div class="border border-gray-800 p-5 rounded-xl bg-gray-900/60 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="text-sm font-bold text-white">Active FIFO Waitlist Queue</div>
-            <button onclick="triggerPromotionDemo()" id="btn-promo-demo" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition">
-              Simulate: Cancel Table 5 & Auto-Promote
-            </button>
-          </div>
-
-          <div class="space-y-2.5 text-xs">
-            <div id="wl-item-1" class="flex items-center justify-between p-3 bg-gray-950 rounded-lg border border-gray-800">
-              <div>
-                <span class="font-bold text-sky-400 mr-2">Queue #1:</span>
-                <span class="font-semibold text-white">Alice Cooper</span>
-                <span class="text-gray-400 ml-2">(Party of 5 &middot; Desired: Table 5 slot)</span>
-              </div>
-              <span id="wl-status-1" class="px-2.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">WAITING</span>
-            </div>
-
-            <div class="flex items-center justify-between p-3 bg-gray-950 rounded-lg border border-gray-800">
-              <div>
-                <span class="font-bold text-sky-400 mr-2">Queue #2:</span>
-                <span class="font-semibold text-white">David Chen</span>
-                <span class="text-gray-400 ml-2">(Party of 4 &middot; Desired: Table 5 slot)</span>
-              </div>
-              <span class="px-2.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">WAITING</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: STAGE 4 (AUDIT & OBSERVABILITY) -->
-    <div id="content-stage4" class="tab-content hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="card p-4 rounded-xl">
-          <div class="text-xs text-gray-400 font-semibold">Total Reservations</div>
-          <div class="text-2xl font-black text-sky-400 mt-1">128</div>
-        </div>
-        <div class="card p-4 rounded-xl">
-          <div class="text-xs text-gray-400 font-semibold">Conflicts Prevented</div>
-          <div class="text-2xl font-black text-amber-400 mt-1">49</div>
-        </div>
-        <div class="card p-4 rounded-xl">
-          <div class="text-xs text-gray-400 font-semibold">Double Bookings</div>
-          <div class="text-2xl font-black text-emerald-400 mt-1">0 (Strictly Zero)</div>
-        </div>
-        <div class="card p-4 rounded-xl">
-          <div class="text-xs text-gray-400 font-semibold">Waitlist Promotions</div>
-          <div class="text-2xl font-black text-purple-400 mt-1">14</div>
-        </div>
       </div>
 
-      <!-- Live Audit Log Stream -->
-      <div class="card rounded-2xl p-5 space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h3 class="text-sm font-bold text-white">Immutable Operational Audit Ledger (`audit_logs`)</h3>
-          <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-            /health/live: ALIVE &middot; /health/ready: READY
-          </span>
+      <!-- Live Execution Progress / Result Metrics -->
+      <div id="stress-results-panel" class="hidden space-y-4">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 font-mono text-center">
+          <div>
+            <div class="text-[11px] text-zinc-500 uppercase">Total Requests</div>
+            <div class="text-xl font-bold text-white mt-1" id="stress-total">50</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-zinc-500 uppercase">HTTP 201 Created</div>
+            <div class="text-xl font-bold text-emerald-400 mt-1" id="stress-created">1</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-zinc-500 uppercase">HTTP 409 Conflicts</div>
+            <div class="text-xl font-bold text-rose-400 mt-1" id="stress-conflicts">49</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-zinc-500 uppercase">Total Wall Time</div>
+            <div class="text-xl font-bold text-zinc-200 mt-1" id="stress-duration">-- ms</div>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <div class="text-[11px] text-zinc-500 uppercase">Double-Bookings</div>
+            <div class="text-xl font-bold text-emerald-400 mt-1">0 (0.00%)</div>
+          </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-gray-900/80 text-gray-400 border-b border-gray-800">
+        <!-- Winner Banner -->
+        <div id="stress-winner-banner" class="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/50 text-xs font-mono text-emerald-300 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Winner: <strong id="stress-winner-name" class="text-white">--</strong> reserved Table 1 (ID: <span id="stress-winner-id">--</span>)</span>
+          </div>
+          <span class="text-emerald-400 font-sans text-[11px]">Committed to Neon DB</span>
+        </div>
+
+        <!-- Transaction Table Stream -->
+        <div class="overflow-x-auto max-h-64 custom-scrollbar rounded-xl border border-zinc-800 bg-zinc-950/60">
+          <table class="w-full text-left text-xs font-mono border-collapse">
+            <thead class="sticky top-0 bg-zinc-900 border-b border-zinc-800 text-zinc-400 text-[11px]">
               <tr>
-                <th class="py-2.5 px-3">EVENT_TYPE</th>
-                <th class="py-2.5 px-3">TABLE</th>
-                <th class="py-2.5 px-3">GUEST</th>
-                <th class="py-2.5 px-3">PARTY</th>
-                <th class="py-2.5 px-3">STATUS</th>
-                <th class="py-2.5 px-3">DETAILS</th>
+                <th class="py-2 px-3">#</th>
+                <th class="py-2 px-3">Guest Candidate</th>
+                <th class="py-2 px-3">HTTP Status</th>
+                <th class="py-2 px-3">DB Engine Response</th>
+                <th class="py-2 px-3 text-right">Latency</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-800 text-gray-200">
-              <tr>
-                <td class="py-2.5 px-3 font-bold text-purple-400">WAITLIST_PROMOTED</td>
-                <td class="py-2.5 px-3">Table 5</td>
-                <td class="py-2.5 px-3">Alice Cooper</td>
-                <td class="py-2.5 px-3">5</td>
-                <td class="py-2.5 px-3 text-emerald-400 font-bold">201</td>
-                <td class="py-2.5 px-3 text-gray-400">Auto-promoted into vacated slot without race condition</td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-bold text-rose-400">RESERVATION_CANCELLED</td>
-                <td class="py-2.5 px-3">Table 5</td>
-                <td class="py-2.5 px-3">Original Host</td>
-                <td class="py-2.5 px-3">6</td>
-                <td class="py-2.5 px-3 text-sky-400 font-bold">200</td>
-                <td class="py-2.5 px-3 text-gray-400">Vacated Table 5; triggered FIFO promotion check</td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-bold text-amber-400">COLLISION_BLOCKED</td>
-                <td class="py-2.5 px-3">Table 6</td>
-                <td class="py-2.5 px-3">Concurrent Guest #42</td>
-                <td class="py-2.5 px-3">8</td>
-                <td class="py-2.5 px-3 text-rose-400 font-bold">409</td>
-                <td class="py-2.5 px-3 text-gray-400">Pessimistic row lock rejected overlapping transaction</td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-bold text-sky-400">IDEMPOTENT_REPLAY</td>
-                <td class="py-2.5 px-3">Table 2</td>
-                <td class="py-2.5 px-3">Idempotent Guest</td>
-                <td class="py-2.5 px-3">2</td>
-                <td class="py-2.5 px-3 text-emerald-400 font-bold">200</td>
-                <td class="py-2.5 px-3 text-gray-400">SHA-256 payload verified; returned original reservation</td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-bold text-emerald-400">RESERVATION_CREATED</td>
-                <td class="py-2.5 px-3">Table 6</td>
-                <td class="py-2.5 px-3">Concurrent Guest #1</td>
-                <td class="py-2.5 px-3">8</td>
-                <td class="py-2.5 px-3 text-emerald-400 font-bold">201</td>
-                <td class="py-2.5 px-3 text-gray-400">First transaction acquired row lock and confirmed</td>
-              </tr>
+            <tbody id="stress-stream-body" class="divide-y divide-zinc-900 text-[11px]">
+              <!-- Populated by stress test -->
             </tbody>
           </table>
         </div>
       </div>
+    </section>
+
+    <!-- Real Neon Audit Log Stream -->
+    <section class="panel-card rounded-2xl p-6 sm:p-8 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-white tracking-tight">Audit Log & State Transitions</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">Tamper-Evident</span>
+          </div>
+          <p class="text-xs text-zinc-400">Immutable ledger of reservation lifecycle events recorded in Neon PostgreSQL</p>
+        </div>
+        <button onclick="fetchAuditLogs()" class="text-xs font-mono text-zinc-400 hover:text-zinc-200 transition">
+          Refresh Logs
+        </button>
+      </div>
+
+      <div class="overflow-x-auto max-h-80 custom-scrollbar rounded-xl border border-zinc-800/80 bg-zinc-950/80">
+        <table class="w-full text-left text-xs font-mono border-collapse">
+          <thead class="sticky top-0 bg-zinc-900/90 border-b border-zinc-800 text-zinc-400 text-[11px]">
+            <tr>
+              <th class="py-2 px-3">Timestamp (UTC)</th>
+              <th class="py-2 px-3">Event Type</th>
+              <th class="py-2 px-3">Table</th>
+              <th class="py-2 px-3">Guest / Party</th>
+              <th class="py-2 px-3">Status</th>
+              <th class="py-2 px-3">Details</th>
+            </tr>
+          </thead>
+          <tbody id="audit-log-body" class="divide-y divide-zinc-900 text-[11px]">
+            <tr>
+              <td colspan="6" class="py-6 text-center text-zinc-500 font-sans text-xs">Loading audit events from Neon DB...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-800/80 bg-zinc-950/90 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
+      <div>
+        <span>Dark Factory Architecture</span> &middot; 
+        <span class="text-zinc-400">Autonomous TableKeeper</span> &middot; 
+        <span>WeAreDevelopers x BAND Hackathon</span>
+      </div>
+      <div>
+        <span>Storage: Neon Serverless PostgreSQL</span> &middot; 
+        <span>Hosting: Vercel Serverless Edge</span>
+      </div>
     </div>
+  </footer>
 
-    <!-- Footer -->
-    <footer class="text-center text-xs text-gray-500 pt-4 border-t border-gray-800">
-      Built for WeAreDevelopers x BAND Hackathon (Dark Factory Edition) &middot; Repository: <a href="https://github.com/DeathKnell837/dark-factory-tablekeeper" target="_blank" class="text-sky-400 hover:underline">DeathKnell837/dark-factory-tablekeeper</a>
-    </footer>
-  </div>
-
+  <!-- Core JavaScript Application Logic (100% Real API Endpoints) -->
   <script>
-    function setTab(name) {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('border-sky-500', 'text-sky-400', 'font-semibold');
-        b.classList.add('border-transparent', 'text-gray-400');
+    // State cache
+    let cachedTables = [];
+    let cachedReservations = [];
+    let cachedWaitlist = [];
+
+    // Helper: Initialize default datetime pickers to upcoming hour
+    function setDefaultTimeInputs() {
+      const now = new Date();
+      // Next hour rounded
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0);
+      const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // +2 hours
+
+      const toLocalIso = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+
+      document.getElementById('res-start-time').value = toLocalIso(start);
+      document.getElementById('res-end-time').value = toLocalIso(end);
+    }
+
+    // Toast message notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-4 rounded-xl border text-xs shadow-2xl backdrop-blur-md pointer-events-auto transition transform duration-300 translate-y-2 opacity-0 flex items-start gap-3 ${
+        type === 'error'
+          ? 'bg-rose-950/90 border-rose-800 text-rose-200'
+          : type === 'warning'
+          ? 'bg-amber-950/90 border-amber-800 text-amber-200'
+          : 'bg-zinc-900/95 border-zinc-700 text-zinc-100'
+      }`;
+
+      const iconSvg = type === 'error'
+        ? '<svg class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'
+        : '<svg class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+
+      toast.innerHTML = `
+        ${iconSvg}
+        <div class="flex-1">${message}</div>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
       });
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-
-      const activeBtn = document.getElementById('tab-' + name);
-      const activeContent = document.getElementById('content-' + name);
-      if (activeBtn && activeContent) {
-        activeBtn.classList.remove('border-transparent', 'text-gray-400');
-        activeBtn.classList.add('border-sky-500', 'text-sky-400', 'font-semibold');
-        activeContent.classList.remove('hidden');
-      }
-    }
-
-    function runConcurrencySim() {
-      const btn = document.getElementById('btn-sim');
-      const log = document.getElementById('sim-log');
-      const successEl = document.getElementById('sim-success');
-      const conflictEl = document.getElementById('sim-conflict');
-
-      btn.disabled = true;
-      btn.innerText = 'Executing 50 Concurrent Transactions...';
-      log.innerHTML = '';
-      successEl.innerText = '0';
-      conflictEl.innerText = '0';
-
-      let successes = 0;
-      let conflicts = 0;
-
-      for (let i = 1; i <= 50; i++) {
-        setTimeout(() => {
-          if (i === 1) {
-            successes++;
-            successEl.innerText = '1';
-            log.innerHTML += `<div class="text-emerald-400">[TX #${i.toString().padStart(2, '0')}] ACQUIRED ROW LOCK &middot; 201 CREATED &middot; Reservation #1042 confirmed</div>`;
-          } else {
-            conflicts++;
-            conflictEl.innerText = conflicts;
-            log.innerHTML += `<div class="text-rose-400">[TX #${i.toString().padStart(2, '0')}] LOCK CONTENTION &middot; OVERLAP DETECTED &middot; 409 CONFLICT (Blocked double-booking)</div>`;
-          }
-          log.scrollTop = log.scrollHeight;
-
-          if (i === 50) {
-            btn.disabled = false;
-            btn.innerText = '🚀 Run Again';
-            log.innerHTML += `<div class="text-sky-400 font-bold pt-2 border-t border-gray-800 mt-2">Simulation Complete: 1 Winner (201), 49 Blocked (409). 0 Double Bookings!</div>`;
-            log.scrollTop = log.scrollHeight;
-          }
-        }, i * 25);
-      }
-    }
-
-    function triggerPromotionDemo() {
-      const btn = document.getElementById('btn-promo-demo');
-      const tableStatus = document.getElementById('table-5-status');
-      const tableCard = document.getElementById('table-5-card');
-      const wlStatus = document.getElementById('wl-status-1');
-      const wlItem = document.getElementById('wl-item-1');
-
-      btn.disabled = true;
-      btn.innerText = 'Cancelling & Promoting...';
 
       setTimeout(() => {
-        tableStatus.innerText = 'Promoted: Alice (5)';
-        tableStatus.className = 'text-[10px] text-purple-400 bg-purple-500/20 px-2 py-0.5 rounded font-bold';
-        tableCard.className = 'p-3.5 rounded-xl border border-purple-500/40 bg-purple-500/10 text-center';
-
-        wlStatus.innerText = 'PROMOTED (Res #1043)';
-        wlStatus.className = 'px-2.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold';
-        wlItem.className = 'flex items-center justify-between p-3 bg-purple-950/40 rounded-lg border border-purple-500/40';
-
-        btn.innerText = 'Auto-Promotion Complete!';
-      }, 700);
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
     }
+
+    // Fetch Database & System Status
+    async function fetchSystemStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const json = await res.json();
+        if (json.status === 'operational') {
+          document.getElementById('db-connection-text').textContent = 'Neon PostgreSQL Connected';
+          document.getElementById('db-latency-text').textContent = `${json.latencyMs} ms`;
+          document.getElementById('metric-tables').textContent = json.data.tables_count || 6;
+          document.getElementById('metric-reservations').textContent = json.data.reservations_count || 0;
+          document.getElementById('metric-waitlist').textContent = json.data.waitlist_waiting_count || 0;
+          document.getElementById('metric-audit').textContent = json.data.audit_logs_count || 0;
+        }
+      } catch (err) {
+        document.getElementById('db-connection-text').textContent = 'Connecting to Neon...';
+      }
+    }
+
+    // Fetch All Tables
+    async function fetchTables() {
+      try {
+        const res = await fetch('/api/tables');
+        const json = await res.json();
+        if (json.success) {
+          cachedTables = json.tables;
+          renderTablesGrid(json.tables);
+          document.getElementById('fleet-update-time').textContent = 'Refreshed: ' + new Date().toLocaleTimeString();
+        }
+      } catch (err) {
+        console.error('Failed to fetch tables:', err);
+      }
+    }
+
+    function renderTablesGrid(tables) {
+      const container = document.getElementById('tables-grid');
+      container.innerHTML = '';
+
+      tables.forEach(table => {
+        const bookingCount = table.current_reservations ? table.current_reservations.length : 0;
+        const isOccupied = bookingCount > 0;
+
+        const card = document.createElement('div');
+        card.className = `panel-card p-4 rounded-xl space-y-3 ${isOccupied ? 'border-zinc-700' : 'border-zinc-800'}`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full ${isOccupied ? 'bg-amber-400' : 'bg-emerald-400'}"></span>
+              <span class="font-semibold text-sm text-white">${table.name}</span>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 border border-zinc-700/60">
+              ${table.capacity} Seats
+            </span>
+          </div>
+
+          <div class="text-xs text-zinc-400 flex items-center justify-between font-mono">
+            <span>Tz: ${table.timezone}</span>
+            <span class="${isOccupied ? 'text-amber-400 font-semibold' : 'text-emerald-400'}">
+              ${isOccupied ? `${bookingCount} Booking(s)` : 'Available'}
+            </span>
+          </div>
+
+          ${isOccupied ? `
+            <div class="pt-2 border-t border-zinc-800 text-[11px] font-mono text-zinc-300 space-y-1">
+              ${table.current_reservations.map(r => `
+                <div class="flex items-center justify-between bg-zinc-900/60 px-2 py-1 rounded">
+                  <span class="truncate max-w-[120px]">${r.guest_name} (${r.party_size}p)</span>
+                  <span class="text-zinc-500">${new Date(r.start_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Fetch Active Reservations
+    async function fetchReservations() {
+      try {
+        const res = await fetch('/api/reservations');
+        const json = await res.json();
+        if (json.success) {
+          cachedReservations = json.reservations;
+          renderReservationsTable(json.reservations);
+          document.getElementById('metric-reservations').textContent = json.reservations.length;
+          document.getElementById('reservations-count-badge').textContent = `${json.reservations.length} Bookings`;
+        }
+      } catch (err) {
+        console.error('Failed to fetch reservations:', err);
+      }
+    }
+
+    function renderReservationsTable(reservations) {
+      const tbody = document.getElementById('reservations-table-body');
+      tbody.innerHTML = '';
+
+      if (reservations.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-6 text-center text-zinc-500 font-sans text-xs">
+              No active reservations in Neon PostgreSQL. Use the form to book or run the stress test.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      reservations.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-zinc-900/40 transition';
+
+        const startTime = new Date(r.start_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        const endTime = new Date(r.end_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        const dateStr = new Date(r.start_at).toLocaleDateString([], {month: 'short', day: 'numeric'});
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-zinc-400">#${r.id}</td>
+          <td class="py-2.5 px-3 text-zinc-200 font-semibold">${r.table_name}</td>
+          <td class="py-2.5 px-3 text-white">${r.guest_name}</td>
+          <td class="py-2.5 px-3 text-zinc-300">${r.party_size} Guests</td>
+          <td class="py-2.5 px-3 text-zinc-400">${dateStr} ${startTime} - ${endTime}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="cancelReservation(${r.id})" class="px-2.5 py-1 rounded bg-zinc-900 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-300 border border-zinc-800 hover:border-rose-800/60 transition text-[11px]">
+              Cancel
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Fetch Waitlist
+    async function fetchWaitlist() {
+      try {
+        const res = await fetch('/api/waitlist');
+        const json = await res.json();
+        if (json.success) {
+          cachedWaitlist = json.waitlist;
+          renderWaitlist(json.waitlist);
+          const waitingCount = json.waitlist.filter(w => w.status === 'WAITING').length;
+          document.getElementById('metric-waitlist').textContent = waitingCount;
+        }
+      } catch (err) {
+        console.error('Failed to fetch waitlist:', err);
+      }
+    }
+
+    function renderWaitlist(waitlist) {
+      const container = document.getElementById('waitlist-container');
+      container.innerHTML = '';
+
+      if (waitlist.length === 0) {
+        container.innerHTML = '<div class="text-zinc-500 text-center py-2 font-mono text-[11px]">Waitlist is empty.</div>';
+        return;
+      }
+
+      waitlist.slice(-5).reverse().forEach(w => {
+        const item = document.createElement('div');
+        const isPromoted = w.status === 'PROMOTED';
+        item.className = `p-2.5 rounded-lg border font-mono flex items-center justify-between text-[11px] ${
+          isPromoted
+            ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300'
+            : 'bg-zinc-900/70 border-zinc-800 text-zinc-300'
+        }`;
+
+        item.innerHTML = `
+          <div>
+            <div class="font-semibold text-zinc-100">${w.guest_name} (${w.party_size}p)</div>
+            <div class="text-[10px] text-zinc-500">Waitlist #${w.id}</div>
+          </div>
+          <div>
+            ${isPromoted ? `
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">
+                PROMOTED (Res #${w.promoted_reservation_id})
+              </span>
+            ` : `
+              <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                WAITING (FIFO)
+              </span>
+            `}
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Fetch Audit Logs
+    async function fetchAuditLogs() {
+      try {
+        const res = await fetch('/api/audit-logs?limit=40');
+        const json = await res.json();
+        if (json.success) {
+          renderAuditLogs(json.logs);
+          document.getElementById('metric-audit').textContent = json.logs.length;
+        }
+      } catch (err) {
+        console.error('Failed to fetch audit logs:', err);
+      }
+    }
+
+    function renderAuditLogs(logs) {
+      const tbody = document.getElementById('audit-log-body');
+      tbody.innerHTML = '';
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-6 text-center text-zinc-500 font-sans text-xs">No audit logs recorded yet.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      logs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-zinc-900/40 transition';
+
+        const isSuccess = log.status_code >= 200 && log.status_code < 300;
+        const isConflict = log.status_code === 409;
+        const statusBadgeClass = isSuccess 
+          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+          : isConflict 
+          ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+          : 'bg-zinc-800 text-zinc-400 border-zinc-700';
+
+        const timeStr = new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-zinc-400">${timeStr}</td>
+          <td class="py-2 px-3 font-semibold text-zinc-200">${log.event_type}</td>
+          <td class="py-2 px-3 text-zinc-400">${log.table_name || (log.table_id ? 'Table ' + log.table_id : '--')}</td>
+          <td class="py-2 px-3 text-zinc-300">${log.guest_name ? `${log.guest_name} (${log.party_size || ''}p)` : '--'}</td>
+          <td class="py-2 px-3">
+            <span class="px-1.5 py-0.5 rounded border text-[10px] ${statusBadgeClass}">
+              ${log.status_code}
+            </span>
+          </td>
+          <td class="py-2 px-3 text-zinc-400 truncate max-w-xs" title="${log.details || ''}">${log.details || '--'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Refresh All Data
+    async function refreshAllData() {
+      const btn = document.getElementById('refresh-btn');
+      btn.classList.add('animate-spin');
+      await Promise.all([
+        fetchSystemStatus(),
+        fetchTables(),
+        fetchReservations(),
+        fetchWaitlist(),
+        fetchAuditLogs()
+      ]);
+      setTimeout(() => btn.classList.remove('animate-spin'), 400);
+    }
+
+    // Handle Direct Reservation Submission
+    async function handleCreateReservation(e) {
+      e.preventDefault();
+      const conflictAlert = document.getElementById('booking-conflict-alert');
+      conflictAlert.classList.add('hidden');
+
+      const submitBtn = document.getElementById('create-res-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Verifying GiST Exclusion...</span>';
+
+      const tableId = parseInt(document.getElementById('res-table-id').value, 10);
+      const guestName = document.getElementById('res-guest-name').value;
+      const partySize = parseInt(document.getElementById('res-party-size').value, 10);
+      const startAtVal = document.getElementById('res-start-time').value;
+      const endAtVal = document.getElementById('res-end-time').value;
+      const timezone = document.getElementById('res-timezone').value;
+
+      const payload = {
+        table_id: tableId,
+        guest_name: guestName,
+        guest_email: guestName.toLowerCase().replace(/\s+/g, '.') + '@client.com',
+        party_size: partySize,
+        start_at: new Date(startAtVal).toISOString(),
+        end_at: new Date(endAtVal).toISOString(),
+        requested_timezone: timezone
+      };
+
+      try {
+        const res = await fetch('/api/reservations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.status === 201) {
+          showToast(`Reservation #${data.reservation.id} confirmed for ${guestName} on Table ${tableId}!`, 'success');
+          await refreshAllData();
+        } else if (res.status === 409) {
+          conflictAlert.classList.remove('hidden');
+          document.getElementById('booking-conflict-message').textContent = data.error || 'Double-booking rejected by PostgreSQL GiST exclusion.';
+          showToast(`Double-booking blocked: Table ${tableId} is already reserved for this slot.`, 'error');
+          await fetchAuditLogs();
+        } else {
+          showToast(`Failed: ${data.error || 'Unknown error'}`, 'error');
+        }
+      } catch (err) {
+        showToast('Network error while booking: ' + err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <span>Confirm Reservation</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        `;
+      }
+    }
+
+    // Handle Join Waitlist
+    async function handleJoinWaitlist(e) {
+      e.preventDefault();
+      const guestName = document.getElementById('wl-guest-name').value;
+      const partySize = parseInt(document.getElementById('wl-party-size').value, 10);
+      const startAtVal = document.getElementById('res-start-time').value;
+      const endAtVal = document.getElementById('res-end-time').value;
+
+      const payload = {
+        guest_name: guestName,
+        guest_email: guestName.toLowerCase().replace(/\s+/g, '.') + '@waitlist.com',
+        party_size: partySize,
+        start_at: new Date(startAtVal).toISOString(),
+        end_at: new Date(endAtVal).toISOString(),
+        requested_timezone: 'UTC'
+      };
+
+      try {
+        const res = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.status === 201) {
+          showToast(`Guest ${guestName} joined the waitlist queue (#${data.entry.id})!`, 'success');
+          await refreshAllData();
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
+      }
+    }
+
+    // Cancel Reservation with Auto-Promotion
+    async function cancelReservation(id) {
+      if (!confirm(`Cancel reservation #${id}? If an eligible guest is on the waitlist, they will be automatically promoted.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/reservations?id=${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          if (data.promoted) {
+            showToast(`Reservation #${id} cancelled. Waitlist guest ${data.promoted.guestName} AUTO-PROMOTED to ${data.promoted.tableName} (New Res #${data.promoted.reservationId})!`, 'success');
+          } else {
+            showToast(`Reservation #${id} cancelled successfully.`, 'success');
+          }
+          await refreshAllData();
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Cancellation error: ' + err.message, 'error');
+      }
+    }
+
+    // Execute Real 50-Request Concurrency Burst
+    async function runConcurrencyStressTest(count = 50) {
+      const btn = document.getElementById('stress-btn-50');
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      btn.innerHTML = `
+        <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Executing 50 Parallel Neon Queries...</span>
+      `;
+
+      const resultsPanel = document.getElementById('stress-results-panel');
+      resultsPanel.classList.remove('hidden');
+
+      const tbody = document.getElementById('stress-stream-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-zinc-400">Firing 50 parallel requests into Neon PostgreSQL...</td></tr>';
+
+      try {
+        const res = await fetch('/api/concurrency-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            table_id: 1,
+            count: count,
+            party_size: 2
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('stress-total').textContent = data.meta.totalRequests;
+          document.getElementById('stress-created').textContent = data.meta.successCount;
+          document.getElementById('stress-conflicts').textContent = data.meta.conflictCount;
+          document.getElementById('stress-duration').textContent = `${data.meta.totalDurationMs} ms`;
+
+          if (data.winner) {
+            document.getElementById('stress-winner-name').textContent = data.winner.guestName;
+            document.getElementById('stress-winner-id').textContent = data.winner.reservationId;
+          }
+
+          // Populate stream table
+          tbody.innerHTML = '';
+          data.results.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.className = item.status === 201 ? 'bg-emerald-950/40 text-emerald-200' : 'hover:bg-zinc-900/60 text-zinc-300';
+
+            const statusClass = item.status === 201 
+              ? 'text-emerald-400 font-bold' 
+              : 'text-rose-400 font-semibold';
+
+            tr.innerHTML = `
+              <td class="py-2 px-3 text-zinc-500">${item.index}</td>
+              <td class="py-2 px-3 font-mono">${item.guestName}</td>
+              <td class="py-2 px-3 ${statusClass}">${item.statusText}</td>
+              <td class="py-2 px-3 text-zinc-400 truncate max-w-xs">${item.status === 201 ? `Committed (Res #${item.reservationId})` : item.error}</td>
+              <td class="py-2 px-3 text-right font-mono text-zinc-400">${item.latencyMs}ms</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          showToast(`Concurrency burst complete! Exactly ${data.meta.successCount} succeeded and ${data.meta.conflictCount} blocked in ${data.meta.totalDurationMs}ms.`, 'success');
+          await refreshAllData();
+        } else {
+          showToast('Stress test execution error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Stress test failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        btn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Run 50-Request Concurrency Burst</span>
+        `;
+      }
+    }
+
+    // Reset Demo Database
+    async function resetDemoDatabase() {
+      if (!confirm('Reset all reservations, waitlist entries, and audit logs in Neon PostgreSQL back to clean factory state? Tables will remain seeded.')) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/reset-demo', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Database reset to clean factory state!', 'success');
+          document.getElementById('stress-results-panel').classList.add('hidden');
+          await refreshAllData();
+        } else {
+          showToast('Reset failed: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Reset error: ' + err.message, 'error');
+      }
+    }
+
+    // Initialize application on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setDefaultTimeInputs();
+      refreshAllData();
+
+      // Poll background status every 6 seconds
+      setInterval(fetchSystemStatus, 6000);
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,12 @@
+{
+  "name": "dark-factory-tablekeeper",
+  "version": "1.0.0",
+  "description": "Zero double-booking restaurant reservation engine with real Neon Serverless PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}
