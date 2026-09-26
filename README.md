@@ -96,10 +96,12 @@ The production dashboard at [dark-factory-tablekeeper.vercel.app](https://dark-f
 | `/api/waitlist` | `GET, POST, DELETE` | Manages the FIFO waitlist queue with party sizes and requested time slots. |
 | `/api/concurrency-test` | `POST` | Fires 50 simultaneous parallel asynchronous queries into Neon to prove 1 winner / 49 conflicts. |
 | `/api/audit-logs` | `GET` | Retrieves the immutable audit ledger with event filtering (`ALL`, `201`, `409`). |
+| `/api/factory-status` | `GET` | Returns live BAND room status, active agent seats, verification milestones, and Groq engine telemetry. |
 | `/api/reset-demo` | `POST` | Resets reservations and waitlist back to pristine factory state for live reviewers. |
 
 ### UI and UX Highlights
 - **Zero Emojis**: Clean, professional enterprise SaaS design system (Linear and Vercel dark theme).
+- **BAND Dark Factory Headquarters**: Embedded control room displaying live agent seats (Planner, Executor, Reviewer), room connection state, and interactive stage handoff transcripts.
 - **Seat Visualization**: Visual seat count badges (2 Seats, 4 Seats, 8 Seats) with live status indicators.
 - **One-Click Presets**: Quick selection for In 1 Hour, Tonight 7:00 PM, and Tomorrow 8:00 PM.
 - **Interactive Fleet**: Click any table card to automatically select and focus it in the reservation form.
