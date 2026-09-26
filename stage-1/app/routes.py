@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import select, and_, text
+from sqlalchemy.exc import IntegrityError
 from datetime import date, time
 from typing import List, Optional
 
@@ -17,11 +18,9 @@ async def check_overlap(
     start_time: time,
     end_time: time,
     exclude_id: Optional[int] = None,
-    lock: bool = False,
 ) -> int:
     """
-    Count overlapping reservations.
-    Uses SELECT FOR UPDATE when lock=True to prevent concurrent double-bookings.
+    Count overlapping reservations for a table on a given date/time range.
     """
     query = text("""
         SELECT COUNT(*) FROM reservations
@@ -29,8 +28,8 @@ async def check_overlap(
           AND date = :date
           AND start_time < :end_time
           AND end_time > :start_time
-          AND (:exclude_id IS NULL OR id != :exclude_id)
-        """ + ("FOR UPDATE" if lock else ""))
+          AND (CAST(:exclude_id AS INTEGER) IS NULL OR id != CAST(:exclude_id AS INTEGER))
+    """)
 
     result = await session.execute(query, {
         "table_id": table_id,
@@ -62,18 +61,24 @@ async def create_reservation(
         if existing:
             return existing
 
+    # Validate time range
     if payload.start_time >= payload.end_time:
         raise HTTPException(status_code=400, detail="start_time must be before end_time")
 
     async with db.begin_nested():
-        # Pessimistic lock prevents concurrent double-bookings
+        # Lock the table row exclusively for the duration of this transaction
+        lock_query = text("SELECT id FROM tables WHERE id = :table_id FOR UPDATE")
+        table_result = await db.execute(lock_query, {"table_id": payload.table_id})
+        if not table_result.scalar():
+            raise HTTPException(status_code=404, detail=f"Table {payload.table_id} does not exist")
+
+        # Now check for overlapping reservations under exclusive lock
         count = await check_overlap(
             db,
             table_id=payload.table_id,
             date_=payload.date,
             start_time=payload.start_time,
             end_time=payload.end_time,
-            lock=True,
         )
         if count > 0:
             raise HTTPException(
