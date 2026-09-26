@@ -549,6 +549,28 @@
             </button>
           </form>
 
+          <!-- Auto-Promotion Live Sandbox Feature -->
+          <div class="p-4 rounded-xl bg-gradient-to-br from-amber-950/20 to-zinc-900 border border-amber-800/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-xs font-bold text-white font-mono">Stage 3 Verification Sandbox</span>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/50">Atomic FIFO</span>
+            </div>
+            <p class="text-[11px] text-zinc-400 leading-relaxed">
+              Demonstrates atomic waitlist promotion without race conditions: books Table 1 for Alice, queues Bob on the waitlist, cancels Alice, and verifies Bob is auto-promoted into Table 1 by Neon PostgreSQL.
+            </p>
+            <button type="button" onclick="runAutoPromotionSandbox()" id="auto-promo-sandbox-btn" class="w-full py-2 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-black font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-900/20">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Run Auto-Promotion Sandbox Demo</span>
+            </button>
+            <div id="sandbox-status-box" class="hidden p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] font-mono text-zinc-300 space-y-1"></div>
+          </div>
+
           <!-- Current Waitlist Feed -->
           <div class="pt-2">
             <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">Live FIFO Waitlist</div>
@@ -561,54 +583,79 @@
       </section>
     </div>
 
-    <!-- Real Concurrency Stress Test Engine (Live 50 Concurrent DB Queries) -->
+    <!-- Real Concurrency Stress Test Engine (Live Concurrent DB Queries) -->
     <section class="panel-card rounded-2xl p-6 sm:p-8 space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-4 border-b border-zinc-800/80">
         <div>
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded text-[11px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/30">
-              Zero Double-Booking Stress Test
+              Zero Double-Booking Stress Bench
             </span>
-            <span class="text-xs text-zinc-400">Stage 2 & Stage 4 Hackathon Mandate</span>
+            <span class="text-xs text-zinc-400 font-mono">Stage 1 & Stage 4 Kernel Verification</span>
           </div>
           <h2 class="text-xl font-bold text-white tracking-tight mt-1">
-            Real 50-Request Concurrent Collision Engine
+            Real Multi-Threaded Concurrency Collision Lab
           </h2>
-          <p class="text-xs text-zinc-400 max-w-2xl mt-1">
-            Fires 50 simultaneous parallel asynchronous queries targeting Table 1 at the exact same millisecond against Neon PostgreSQL. Demonstrates that PostgreSQL's GiST exclusion constraint strictly allows 1 winner (201 Created) and rejects the remaining 49 with 409 Conflict.
+          <p class="text-xs text-zinc-400 max-w-2xl mt-1 leading-relaxed">
+            Spawns parallel asynchronous queries targeting the exact same table and time window against Neon PostgreSQL. Evaluates hardware/kernel exclusion locking (SQLSTATE 23P01) where exactly 1 booking commits (HTTP 201) and all other concurrent attempts are instantly blocked (HTTP 409).
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <button onclick="runConcurrencyStressTest(50)" id="stress-btn-50" class="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold text-xs tracking-wide transition shadow-lg shadow-blue-900/40 flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Run 50-Request Concurrency Burst</span>
-          </button>
+        <!-- Interactive Stress Controls -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs font-mono text-zinc-300">
+            <span class="text-zinc-500">Target Table:</span>
+            <select id="stress-table-select" class="bg-transparent text-white font-semibold focus:outline-none">
+              <option value="1" class="bg-zinc-900 text-white">Table 1 (2 Seats)</option>
+              <option value="2" class="bg-zinc-900 text-white">Table 2 (2 Seats)</option>
+              <option value="3" class="bg-zinc-900 text-white">Table 3 (4 Seats)</option>
+              <option value="4" class="bg-zinc-900 text-white">Table 4 (4 Seats)</option>
+              <option value="5" class="bg-zinc-900 text-white">Table 5 (6 Seats)</option>
+              <option value="6" class="bg-zinc-900 text-white">Table 6 (8 Seats)</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="runConcurrencyStressTest(10)" class="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono text-xs transition">
+              10 Burst
+            </button>
+            <button onclick="runConcurrencyStressTest(25)" class="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 font-mono text-xs transition">
+              25 Burst
+            </button>
+            <button onclick="runConcurrencyStressTest(50)" id="stress-btn-50" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold text-xs tracking-wide transition shadow-lg shadow-blue-900/40 flex items-center gap-2">
+              <svg class="w-4 h-4 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>50 Concurrency Burst</span>
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Live Execution Progress / Result Metrics -->
       <div id="stress-results-panel" class="hidden space-y-4 animate-slide-up">
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 font-mono text-center">
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 font-mono text-center">
           <div>
-            <div class="text-[11px] text-zinc-500 uppercase">Total Requests</div>
+            <div class="text-[11px] text-zinc-500 uppercase">Requests</div>
             <div class="text-xl font-bold text-white mt-1" id="stress-total">50</div>
           </div>
           <div>
-            <div class="text-[11px] text-zinc-500 uppercase">HTTP 201 Created</div>
+            <div class="text-[11px] text-zinc-500 uppercase">HTTP 201 Winner</div>
             <div class="text-xl font-bold text-emerald-400 mt-1" id="stress-created">1</div>
           </div>
           <div>
-            <div class="text-[11px] text-zinc-500 uppercase">HTTP 409 Conflicts</div>
+            <div class="text-[11px] text-zinc-500 uppercase">HTTP 409 Blocked</div>
             <div class="text-xl font-bold text-rose-400 mt-1" id="stress-conflicts">49</div>
           </div>
           <div>
-            <div class="text-[11px] text-zinc-500 uppercase">Total Wall Time</div>
-            <div class="text-xl font-bold text-zinc-200 mt-1" id="stress-duration">-- ms</div>
+            <div class="text-[11px] text-zinc-500 uppercase">Avg Latency</div>
+            <div class="text-xl font-bold text-zinc-300 mt-1" id="stress-avg-latency">-- ms</div>
           </div>
-          <div class="col-span-2 sm:col-span-1">
+          <div>
+            <div class="text-[11px] text-zinc-500 uppercase">Total Wall Time</div>
+            <div class="text-xl font-bold text-blue-400 mt-1" id="stress-duration">-- ms</div>
+          </div>
+          <div>
             <div class="text-[11px] text-zinc-500 uppercase">Double-Bookings</div>
             <div class="text-xl font-bold text-emerald-400 mt-1">0 (0.00%)</div>
           </div>
@@ -1232,9 +1279,99 @@
       }
     }
 
-    // Execute Real 50-Request Concurrency Burst
+    // Stage 3 Verification: Atomic Auto-Promotion Sandbox Demo
+    async function runAutoPromotionSandbox() {
+      const btn = document.getElementById('auto-promo-sandbox-btn');
+      const statusBox = document.getElementById('sandbox-status-box');
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      statusBox.classList.remove('hidden');
+      statusBox.innerHTML = '<div class="text-amber-400">Step 1/4: Reserving Table 1 for "Alice Cooper (2 Guests)"...</div>';
+
+      try {
+        const now = Date.now() + 18000000; // +5h
+        const startIso = new Date(now).toISOString();
+        const endIso = new Date(now + 7200000).toISOString(); // 2h duration
+
+        // Step 1: Book Alice on Table 1
+        const res1 = await fetch('/api/reservations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            table_id: 1,
+            guest_name: 'Alice Cooper',
+            guest_email: 'alice@demo.sandbox',
+            party_size: 2,
+            start_at: startIso,
+            end_at: endIso
+          })
+        });
+        const d1 = await res1.json();
+        if (!d1.success) throw new Error('Step 1 Failed: ' + (d1.error || 'Conflict'));
+
+        const aliceResId = d1.reservation.id;
+        statusBox.innerHTML += `<div class="text-emerald-400">Step 1 Complete: Alice reserved Table 1 (Res #${aliceResId}).</div>`;
+        await refreshAllData();
+
+        // Step 2: Queue Bob on Waitlist
+        await new Promise(r => setTimeout(r, 700));
+        statusBox.innerHTML += '<div class="text-amber-400">Step 2/4: Enqueuing "Bob Dylan (2 Guests)" on FIFO Waitlist for Table 1 window...</div>';
+        
+        const res2 = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guest_name: 'Bob Dylan',
+            guest_email: 'bob@demo.sandbox',
+            party_size: 2,
+            start_at: startIso,
+            end_at: endIso
+          })
+        });
+        const d2 = await res2.json();
+        if (res2.status !== 201) throw new Error('Step 2 Failed: ' + (d2.error || 'Waitlist error'));
+
+        statusBox.innerHTML += `<div class="text-emerald-400">Step 2 Complete: Bob enqueued on Waitlist (#${d2.entry.id}). Table 1 is fully booked.</div>`;
+        await refreshAllData();
+
+        // Step 3: Cancel Alice's reservation
+        await new Promise(r => setTimeout(r, 900));
+        statusBox.innerHTML += `<div class="text-rose-400">Step 3/4: Cancelling Alice's reservation #${aliceResId}...</div>`;
+
+        const res3 = await fetch(`/api/reservations?id=${aliceResId}`, { method: 'DELETE' });
+        const d3 = await res3.json();
+        if (!d3.success) throw new Error('Step 3 Failed: ' + (d3.error || 'Delete error'));
+
+        // Step 4: Verify Bob was auto-promoted
+        await new Promise(r => setTimeout(r, 600));
+        if (d3.promoted) {
+          statusBox.innerHTML += `
+            <div class="text-emerald-300 font-bold bg-emerald-950/60 p-2 rounded border border-emerald-700/60 mt-1">
+              Step 4 VERIFIED: Bob Dylan AUTO-PROMOTED to Table 1 (New Res #${d3.promoted.reservationId})!
+              <div class="text-[10px] text-emerald-400 font-sans mt-0.5">PostgreSQL transaction executed atomic handoff with zero race conditions.</div>
+            </div>
+          `;
+          showToast(`Atomic Auto-Promotion Verified: Bob Dylan promoted to Table 1!`, 'success');
+        } else {
+          statusBox.innerHTML += `<div class="text-zinc-400">Reservation cancelled. No matching party found for auto-promotion.</div>`;
+        }
+
+        await refreshAllData();
+      } catch (err) {
+        statusBox.innerHTML += `<div class="text-rose-400">Error: ${err.message}</div>`;
+        showToast('Sandbox error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+      }
+    }
+
+    // Execute Real Concurrency Burst
     async function runConcurrencyStressTest(count = 50) {
       const btn = document.getElementById('stress-btn-50');
+      const tableSelect = document.getElementById('stress-table-select');
+      const targetTableId = tableSelect ? parseInt(tableSelect.value, 10) : 1;
+
       btn.disabled = true;
       btn.classList.add('opacity-75');
       btn.innerHTML = `
@@ -1242,21 +1379,21 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
         </svg>
-        <span>Executing 50 Parallel Neon Queries...</span>
+        <span>Executing ${count} Parallel Neon Queries...</span>
       `;
 
       const resultsPanel = document.getElementById('stress-results-panel');
       resultsPanel.classList.remove('hidden');
 
       const tbody = document.getElementById('stress-stream-body');
-      tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-zinc-400">Firing 50 parallel requests into Neon PostgreSQL...</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-zinc-400 font-mono">Firing ${count} parallel requests targeting Table ${targetTableId} into Neon PostgreSQL...</td></tr>`;
 
       try {
         const res = await fetch('/api/concurrency-test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            table_id: 1,
+            table_id: targetTableId,
             count: count,
             party_size: 2
           })
@@ -1269,6 +1406,7 @@
           document.getElementById('stress-created').textContent = data.meta.successCount;
           document.getElementById('stress-conflicts').textContent = data.meta.conflictCount;
           document.getElementById('stress-duration').textContent = `${data.meta.totalDurationMs} ms`;
+          document.getElementById('stress-avg-latency').textContent = `${data.meta.averageLatencyMs || '--'} ms`;
 
           const winnerBanner = document.getElementById('stress-winner-banner');
           if (data.winner) {
