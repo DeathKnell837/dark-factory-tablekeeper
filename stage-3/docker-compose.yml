@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:pass@db:5432/tablekeeper_stage3
+    networks:
+      - internal
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: tablekeeper_stage3
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d tablekeeper_stage3"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+    internal: true

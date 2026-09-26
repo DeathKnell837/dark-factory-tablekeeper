@@ -11,9 +11,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="tablekeeper",
-    description="Restaurant reservation system — a table is never double-booked",
-    version="1.0.0",
+    title="tablekeeper - Stage 3",
+    description="Table capacity optimization, party size matching, and atomic waitlist auto-promotion on cancellation",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -22,4 +22,4 @@ app.include_router(router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "stage": 3, "waitlist_supported": True, "capacity_management": True}

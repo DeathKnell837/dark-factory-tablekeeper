@@ -37,6 +37,7 @@ class Reservation(Base):
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Seed some tables
         from sqlalchemy import text
         await conn.execute(text("""
             INSERT INTO tables (id, name, capacity)
