@@ -340,6 +340,17 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Desired Start (Local)</label>
+                <input type="datetime-local" id="wl-start-time" required class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500">
+              </div>
+              <div>
+                <label class="block font-medium text-zinc-300 mb-1">Desired End (Local)</label>
+                <input type="datetime-local" id="wl-end-time" required class="w-full bg-zinc-900 border border-zinc-700/80 rounded-lg px-3 py-2 text-zinc-200 focus:outline-none focus:border-amber-500">
+              </div>
+            </div>
+
             <button type="submit" id="join-wl-btn" class="w-full py-2 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-zinc-700 hover:border-amber-500/50 font-medium transition">
               Enqueue into Waitlist
             </button>
@@ -510,8 +521,16 @@
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
       };
 
-      document.getElementById('res-start-time').value = toLocalIso(start);
-      document.getElementById('res-end-time').value = toLocalIso(end);
+      const startIso = toLocalIso(start);
+      const endIso = toLocalIso(end);
+
+      document.getElementById('res-start-time').value = startIso;
+      document.getElementById('res-end-time').value = endIso;
+
+      const wlStart = document.getElementById('wl-start-time');
+      const wlEnd = document.getElementById('wl-end-time');
+      if (wlStart) wlStart.value = startIso;
+      if (wlEnd) wlEnd.value = endIso;
     }
 
     // Toast message notification
@@ -588,7 +607,9 @@
         const isOccupied = bookingCount > 0;
 
         const card = document.createElement('div');
-        card.className = `panel-card p-4 rounded-xl space-y-3 ${isOccupied ? 'border-zinc-700' : 'border-zinc-800'}`;
+        card.className = `panel-card p-4 rounded-xl space-y-3 cursor-pointer transition hover:border-zinc-500 ${isOccupied ? 'border-zinc-700' : 'border-zinc-800'}`;
+        card.setAttribute('onclick', `selectTable(${table.id})`);
+        card.setAttribute('title', `Click to select Table ${table.id} in reservation form`);
 
         card.innerHTML = `
           <div class="flex items-center justify-between">
@@ -869,8 +890,8 @@
       e.preventDefault();
       const guestName = document.getElementById('wl-guest-name').value;
       const partySize = parseInt(document.getElementById('wl-party-size').value, 10);
-      const startAtVal = document.getElementById('res-start-time').value;
-      const endAtVal = document.getElementById('res-end-time').value;
+      const startAtVal = document.getElementById('wl-start-time').value;
+      const endAtVal = document.getElementById('wl-end-time').value;
 
       const payload = {
         guest_name: guestName,
@@ -961,9 +982,25 @@
           document.getElementById('stress-conflicts').textContent = data.meta.conflictCount;
           document.getElementById('stress-duration').textContent = `${data.meta.totalDurationMs} ms`;
 
+          const winnerBanner = document.getElementById('stress-winner-banner');
           if (data.winner) {
-            document.getElementById('stress-winner-name').textContent = data.winner.guestName;
-            document.getElementById('stress-winner-id').textContent = data.winner.reservationId;
+            winnerBanner.className = 'p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-800/50 text-xs font-mono text-emerald-300 flex items-center justify-between';
+            winnerBanner.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Winner: <strong class="text-white">${data.winner.guestName}</strong> reserved Table ${data.meta.tableId} (Res #${data.winner.reservationId})</span>
+              </div>
+              <span class="text-emerald-400 font-sans text-[11px]">Committed to Neon DB</span>
+            `;
+          } else {
+            winnerBanner.className = 'p-3.5 rounded-xl bg-rose-950/30 border border-rose-800/50 text-xs font-mono text-rose-300 flex items-center justify-between';
+            winnerBanner.innerHTML = `
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                <span>All ${data.meta.totalRequests} requests conflicted. Table is fully booked for this window.</span>
+              </div>
+              <span class="text-rose-400 font-sans text-[11px]">GiST Exclusion Protected</span>
+            `;
           }
 
           // Populate stream table
@@ -1026,13 +1063,30 @@
       }
     }
 
+    // Quick select table from cards
+    function selectTable(tableId) {
+      const select = document.getElementById('res-table-id');
+      if (select) {
+        select.value = String(tableId);
+        select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        select.classList.add('ring-2', 'ring-blue-500');
+        setTimeout(() => select.classList.remove('ring-2', 'ring-blue-500'), 1500);
+      }
+    }
+
     // Initialize application on page load
     window.addEventListener('DOMContentLoaded', () => {
       setDefaultTimeInputs();
       refreshAllData();
 
-      // Poll background status every 6 seconds
-      setInterval(fetchSystemStatus, 6000);
+      // Background telemetry and fleet poll every 6 seconds
+      setInterval(() => {
+        fetchSystemStatus();
+        fetchTables();
+        fetchReservations();
+        fetchWaitlist();
+        fetchAuditLogs();
+      }, 6000);
     });
   </script>
 </body>

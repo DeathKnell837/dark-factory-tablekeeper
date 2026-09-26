@@ -23,14 +23,32 @@ export default async function handler(req, res) {
     const count = Math.min(Math.max(parseInt(body.count || 50, 10), 5), 50); // Safe bounds: 5 to 50
     const partySize = parseInt(body.party_size || 2, 10);
 
-    // Pick an isolated unique time window for this specific stress test run
-    const nowEpoch = Date.now();
-    const startTimeIso = new Date(nowEpoch + 86400000).toISOString(); // +24 hours
-    const endTimeIso = new Date(nowEpoch + 86400000 + 7200000).toISOString(); // +26 hours (+2h duration)
+    // 1. Clean up prior automated stress-test artifacts on this table so every run evaluates a fresh race condition
+    await sql`DELETE FROM reservations WHERE idempotency_key LIKE 'stress-%'`;
 
+    // 2. Select a guaranteed open 2-hour window on this table, after any manual reservations
+    const existing = await sql`
+      SELECT end_at FROM reservations 
+      WHERE table_id = ${tableId} 
+      ORDER BY end_at DESC 
+      LIMIT 1
+    `;
+
+    let baseEpoch = Date.now() + 86400000; // +24h default
+    if (existing.length > 0 && existing[0].end_at) {
+      const maxEnd = new Date(existing[0].end_at).getTime();
+      if (maxEnd >= baseEpoch) {
+        baseEpoch = maxEnd + 3600000; // +1h after last user booking
+      }
+    }
+
+    const startTimeIso = new Date(baseEpoch).toISOString();
+    const endTimeIso = new Date(baseEpoch + 7200000).toISOString();
+
+    const nowEpoch = Date.now();
     const overallStart = Date.now();
 
-    // Spawn 50 simultaneous parallel asynchronous promises against Neon PostgreSQL
+    // 3. Spawn 50 simultaneous parallel asynchronous promises against Neon PostgreSQL
     const promises = Array.from({ length: count }, async (_, i) => {
       const guestName = `StressRunner-${i + 1}-${nowEpoch.toString().slice(-4)}`;
       const reqStart = Date.now();

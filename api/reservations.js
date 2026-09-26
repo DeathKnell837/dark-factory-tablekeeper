@@ -52,6 +52,15 @@ export default async function handler(req, res) {
         });
       }
 
+      const startDate = new Date(start_at);
+      const endDate = new Date(end_at);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({ success: false, error: 'Invalid date format for start_at or end_at' });
+      }
+      if (startDate >= endDate) {
+        return res.status(400).json({ success: false, error: 'start_at must be strictly before end_at' });
+      }
+
       // Check table capacity
       const [table] = await sql`SELECT id, name, capacity, timezone FROM tables WHERE id = ${table_id}`;
       if (!table) {
