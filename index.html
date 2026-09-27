@@ -266,6 +266,12 @@
           <span class="text-xs font-mono px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
             Stages 1-4: 28/28 Tests Passed (100%)
           </span>
+          <a href="https://app.band.ai/sessions/7a423cfb-9444-4888-8732-a0e1dee3f0bb" target="_blank" rel="noopener noreferrer" class="text-xs font-medium px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 transition flex items-center gap-1.5" title="Open Real BAND Room">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>Open BAND Room</span>
+          </a>
           <button onclick="toggleFactoryLogs()" id="factory-toggle-btn" class="text-xs font-medium px-3.5 py-1.5 rounded-xl bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 border border-purple-700/50 transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -322,85 +328,6 @@
             Executed 28 automated test suites under internal Docker isolation and verified zero double-booking under 50-concurrency load.
           </p>
         </div>
-      </div>
-
-      <!-- Dark Factory Live Agent Chat & Verification Terminal -->
-      <div class="mt-6 pt-6 border-t border-zinc-800/80 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-            <h3 class="text-sm font-bold text-white tracking-tight font-mono">Live Agent Chat & Verification Terminal</h3>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/20">
-              Groq LPU Accelerated
-            </span>
-          </div>
-          <div class="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            Direct Bridge: BAND Room 7a423cfb-9444-4888-8732-a0e1dee3f0bb
-          </div>
-        </div>
-
-        <!-- Agent Tabs Selector -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" onclick="selectChatAgent('planner')" id="agent-tab-planner" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-2 bg-purple-900/40 text-purple-200 border border-purple-700/50">
-            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-            <span>@Planner Agent</span>
-          </button>
-          <button type="button" onclick="selectChatAgent('executor')" id="agent-tab-executor" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-2 bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200">
-            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-            <span>@Executor Agent</span>
-          </button>
-          <button type="button" onclick="selectChatAgent('reviewer')" id="agent-tab-reviewer" class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-2 bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>@Reviewer Agent</span>
-          </button>
-        </div>
-
-        <!-- Quick Questions Chips -->
-        <div class="flex flex-wrap items-center gap-2 text-xs">
-          <span class="text-[11px] text-zinc-500 font-mono">Suggested Inquiries:</span>
-          <button type="button" onclick="askQuickPrompt('Explain the 4 stages architecture of TableKeeper.', 'planner')" class="px-2.5 py-1 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[11px] font-mono transition">
-            "Explain 4 stages architecture"
-          </button>
-          <button type="button" onclick="askQuickPrompt('How does the PostgreSQL GiST exclusion constraint guarantee zero double-bookings?', 'executor')" class="px-2.5 py-1 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[11px] font-mono transition">
-            "How does GiST constraint work?"
-          </button>
-          <button type="button" onclick="askQuickPrompt('What were the verified results of the 50-concurrency collision burst test?', 'reviewer')" class="px-2.5 py-1 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[11px] font-mono transition">
-            "50-concurrency burst results"
-          </button>
-          <button type="button" onclick="askQuickPrompt('How does the FIFO waitlist atomically promote guests on cancellation?', 'executor')" class="px-2.5 py-1 rounded-md bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-[11px] font-mono transition">
-            "Atomic waitlist auto-promotion"
-          </button>
-        </div>
-
-        <!-- Terminal Chat Stream Window -->
-        <div id="agent-chat-terminal" class="space-y-3 font-mono text-xs max-h-80 overflow-y-auto custom-scrollbar p-3.5 rounded-xl bg-zinc-950 border border-zinc-800/90">
-          <div class="p-3 rounded-lg bg-purple-950/20 border border-purple-900/40 text-purple-200">
-            <div class="flex items-center justify-between text-[11px] text-purple-400 mb-1.5">
-              <span class="font-bold flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                Planner Agent (@rogiebacanto2002/planner-agent)
-              </span>
-              <span class="text-zinc-500 font-mono">BAND Room 7a423cfb-9444-4888-8732-a0e1dee3f0bb</span>
-            </div>
-            <p class="leading-relaxed text-zinc-300">
-              Welcome to the TableKeeper Dark Factory. I coordinate task decomposition across all four implementation stages. All 28 acceptance criteria suites have passed and zero double-booking is enforced at the database kernel level. Ask any agent a technical question below.
-            </p>
-          </div>
-        </div>
-
-        <!-- Chat Input Form -->
-        <form id="agent-chat-form" onsubmit="handleAgentChatSubmit(event)" class="flex gap-2">
-          <div class="relative flex-1">
-            <input type="text" id="agent-chat-input" placeholder="Ask @Planner Agent a question or verify system guarantees..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 font-mono transition">
-          </div>
-          <button type="submit" id="agent-chat-submit-btn" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs transition flex items-center gap-1.5 font-mono shadow-lg shadow-purple-900/20">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-            <span>Query Agent</span>
-          </button>
-        </form>
       </div>
 
       <!-- Expandable Room Feed & Artifacts -->
@@ -1578,157 +1505,6 @@
         }
       } catch (err) {
         showToast('Reset error: ' + err.message, 'error');
-      }
-    }
-
-    // Helper: Escape HTML to prevent injection
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    // Agent Chat Terminal Controller
-    let currentSelectedAgent = 'planner';
-
-    function selectChatAgent(agentKey) {
-      currentSelectedAgent = agentKey;
-      const tabs = {
-        planner: document.getElementById('agent-tab-planner'),
-        executor: document.getElementById('agent-tab-executor'),
-        reviewer: document.getElementById('agent-tab-reviewer')
-      };
-
-      const input = document.getElementById('agent-chat-input');
-      const activeClasses = {
-        planner: 'bg-purple-900/40 text-purple-200 border-purple-700/50',
-        executor: 'bg-blue-900/40 text-blue-200 border-blue-700/50',
-        reviewer: 'bg-emerald-900/40 text-emerald-200 border-emerald-700/50'
-      };
-
-      Object.keys(tabs).forEach(k => {
-        if (!tabs[k]) return;
-        tabs[k].className = 'px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition flex items-center gap-2 border ' + 
-          (k === agentKey ? activeClasses[k] : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200');
-      });
-
-      const titles = {
-        planner: '@Planner Agent (Architecture & Stages)',
-        executor: '@Executor Agent (PostgreSQL GiST & Backend)',
-        reviewer: '@Reviewer Agent (Concurrency & QA Sign-off)'
-      };
-      if (input) {
-        input.placeholder = `Ask ${titles[agentKey] || '@Planner Agent'} a question...`;
-        input.focus();
-      }
-    }
-
-    function askQuickPrompt(promptText, agentKey) {
-      if (agentKey) selectChatAgent(agentKey);
-      const input = document.getElementById('agent-chat-input');
-      if (input) {
-        input.value = promptText;
-        sendAgentMessage(promptText, currentSelectedAgent);
-      }
-    }
-
-    function handleAgentChatSubmit(e) {
-      e.preventDefault();
-      const input = document.getElementById('agent-chat-input');
-      const message = input ? input.value.trim() : '';
-      if (!message) return;
-      sendAgentMessage(message, currentSelectedAgent);
-    }
-
-    async function sendAgentMessage(message, agentKey) {
-      const terminal = document.getElementById('agent-chat-terminal');
-      const input = document.getElementById('agent-chat-input');
-      const btn = document.getElementById('agent-chat-submit-btn');
-
-      if (!terminal) return;
-
-      // Append user message immediately
-      const userDiv = document.createElement('div');
-      userDiv.className = 'p-3 rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-200';
-      userDiv.innerHTML = `
-        <div class="flex items-center justify-between text-[11px] text-zinc-500 mb-1">
-          <span class="font-semibold text-zinc-400">You (Website Visitor / Hackathon Judge)</span>
-          <span class="font-mono">${new Date().toLocaleTimeString()}</span>
-        </div>
-        <p class="leading-relaxed text-zinc-200 font-sans">${escapeHtml(message)}</p>
-      `;
-      terminal.appendChild(userDiv);
-
-      // Append thinking indicator
-      const thinkingDiv = document.createElement('div');
-      thinkingDiv.id = 'agent-thinking-pill';
-      thinkingDiv.className = 'p-2.5 rounded-lg bg-zinc-900/40 border border-zinc-800/60 text-zinc-400 text-xs font-mono flex items-center gap-2 animate-pulse';
-      thinkingDiv.innerHTML = `
-        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-        <span>Calling ${agentKey.toUpperCase()} Agent via Groq LPU inference...</span>
-      `;
-      terminal.appendChild(thinkingDiv);
-      terminal.scrollTop = terminal.scrollHeight;
-
-      if (input) input.value = '';
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('opacity-50');
-      }
-
-      try {
-        const res = await fetch('/api/chat-agents', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent: agentKey, message })
-        });
-        const data = await res.json();
-
-        // Remove thinking indicator
-        const pill = document.getElementById('agent-thinking-pill');
-        if (pill) pill.remove();
-
-        if (data.success) {
-          const agentColors = {
-            planner: { bg: 'bg-purple-950/20', border: 'border-purple-900/40', text: 'text-purple-400', dot: 'bg-purple-400' },
-            executor: { bg: 'bg-blue-950/20', border: 'border-blue-900/40', text: 'text-blue-400', dot: 'bg-blue-400' },
-            reviewer: { bg: 'bg-emerald-950/20', border: 'border-emerald-900/40', text: 'text-emerald-400', dot: 'bg-emerald-400' }
-          };
-          const colors = agentColors[agentKey] || agentColors.planner;
-
-          const replyDiv = document.createElement('div');
-          replyDiv.className = `p-3 rounded-lg ${colors.bg} border ${colors.border} text-zinc-300`;
-          replyDiv.innerHTML = `
-            <div class="flex items-center justify-between text-[11px] ${colors.text} mb-1.5">
-              <span class="font-bold flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full ${colors.dot}"></span>
-                ${escapeHtml(data.agent.name)} (${escapeHtml(data.agent.handle)})
-              </span>
-              <span class="font-mono text-zinc-500 text-[10px]">${data.latencyMs}ms &bull; Groq LPU</span>
-            </div>
-            <p class="leading-relaxed text-zinc-300 font-sans">${escapeHtml(data.reply)}</p>
-          `;
-          terminal.appendChild(replyDiv);
-          terminal.scrollTop = terminal.scrollHeight;
-
-          // Trigger background update of audit logs so this query appears in audit ledger!
-          fetchAuditLogs();
-        } else {
-          showToast('Agent query failed: ' + (data.error || 'Unknown error'), 'error');
-        }
-      } catch (err) {
-        const pill = document.getElementById('agent-thinking-pill');
-        if (pill) pill.remove();
-        showToast('Network error querying agent: ' + err.message, 'error');
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('opacity-50');
-        }
       }
     }
 
